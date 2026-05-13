@@ -1,28 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { ContentSidePanel } from "@/components/ContentSidePanel";
 import { Button } from "@/components/ui/Button";
-import {
-  contentItems as defaultContentItems,
-  frames as defaultFrames,
-  mockUsers,
-  tasks as defaultTasks,
-} from "@/lib/mockData";
+import { ContentItem, Frame, mockUsers, Task } from "@/lib/mockData";
 
 type PageViewsProps = {
   page: string;
   search: string;
   statusFilter: string;
   typeFilter: string;
+  contentItems: ContentItem[];
+  frames: Frame[];
+  tasks: Task[];
+  setFrames: Dispatch<SetStateAction<Frame[]>>;
 };
 
 const statusBuckets = ["Draft", "Review", "Published"] as const;
 
-const filterContent = (status: string, type: string, query: string) => {
-  return defaultContentItems.filter((item) => {
+type CalendarEvent = {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  type: "task" | "publish";
+  contentId: string;
+  status: string;
+};
+
+const filterContent = (items: ContentItem[], status: string, type: string, query: string) => {
+  return items.filter((item) => {
     const matchesStatus = status === "All" || item.status === status;
     const matchesType = type === "All" || item.type === type;
     const matchesQuery = query === "" || item.title.toLowerCase().includes(query.toLowerCase()) || item.hook.toLowerCase().includes(query.toLowerCase());
@@ -32,18 +41,17 @@ const filterContent = (status: string, type: string, query: string) => {
 
 const findUser = (id: string) => mockUsers.find((user) => user.id === id) ?? mockUsers[0];
 
-export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsProps) {
-  const [frames, setFrames] = useState(defaultFrames);
+export function PageViews({ page, search, statusFilter, typeFilter, contentItems, frames, tasks, setFrames }: PageViewsProps) {
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
   const [calendarView, setCalendarView] = useState<"month" | "week">("month");
   const [calendarFilter, setCalendarFilter] = useState<"all" | "tasks" | "publish">("all");
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // May 2026
   const [actionPlanView, setActionPlanView] = useState<"table" | "timeline">("table");
 
-  const filtered = useMemo(() => filterContent(statusFilter, typeFilter, search), [statusFilter, typeFilter, search]);
-  const recentTasks = useMemo(() => defaultTasks.slice(0, 3), []);
+  const filtered = useMemo(() => filterContent(contentItems, statusFilter, typeFilter, search), [contentItems, statusFilter, typeFilter, search]);
+  const recentTasks = useMemo(() => tasks.slice(0, 3), [tasks]);
   const selectedContent = useMemo(
-    () => defaultContentItems.find((item) => item.id === selectedContentId) ?? null,
+    () => contentItems.find((item) => item.id === selectedContentId) ?? null,
     [selectedContentId]
   );
   const selectedFrames = useMemo(
@@ -51,8 +59,8 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
     [frames, selectedContentId]
   );
   const selectedTasks = useMemo(
-    () => (selectedContentId ? defaultTasks.filter((task) => task.contentId === selectedContentId) : []),
-    [selectedContentId]
+    () => (selectedContentId ? tasks.filter((task) => task.contentId === selectedContentId) : []),
+    [selectedContentId, tasks]
   );
 
   const handleAddFrame = (contentId: string) => {
@@ -86,10 +94,10 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
 
   // Calendar events
   const calendarEvents = useMemo(() => {
-    const events = [];
+    const events: CalendarEvent[] = [];
     if (calendarFilter === "all" || calendarFilter === "tasks") {
-      defaultTasks.forEach((task) => {
-        const content = defaultContentItems.find((c) => c.id === task.contentId);
+      tasks.forEach((task) => {
+        const content = contentItems.find((c) => c.id === task.contentId);
         if (content) {
           events.push({
             id: task.id,
@@ -104,7 +112,7 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
       });
     }
     if (calendarFilter === "all" || calendarFilter === "publish") {
-      defaultContentItems.forEach((content) => {
+      contentItems.forEach((content) => {
         events.push({
           id: content.id,
           title: `${content.title} (Publish)`,
@@ -117,7 +125,7 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
       });
     }
     return events;
-  }, [calendarFilter]);
+  }, [calendarFilter, contentItems, tasks]);
 
   const renderCalendar = () => {
     if (calendarView === "month") {
@@ -261,7 +269,7 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
                 {statusBuckets.map((status) => (
                   <div key={status} className="space-y-4 rounded-3xl bg-slate-50 p-4">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-600">{status}</p>
-                    {defaultContentItems
+                    {contentItems
                       .filter((item) => item.status === status)
                       .map((item) => {
                         const owner = findUser(item.ownerId);
@@ -367,11 +375,11 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
               <div className="grid gap-4">
                 <div className="rounded-3xl border border-slate-200 bg-white p-5">
                   <p className="text-sm text-slate-500">Total items</p>
-                  <p className="mt-3 text-3xl font-semibold text-slate-950">{defaultContentItems.length}</p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-950">{contentItems.length}</p>
                 </div>
                 <div className="rounded-3xl border border-slate-200 bg-white p-5">
                   <p className="text-sm text-slate-500">Average progress</p>
-                  <p className="mt-3 text-3xl font-semibold text-slate-950">{Math.round(defaultContentItems.reduce((sum, item) => sum + item.progress, 0) / defaultContentItems.length)}%</p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-950">{contentItems.length ? Math.round(contentItems.reduce((sum, item) => sum + item.progress, 0) / contentItems.length) : 0}%</p>
                 </div>
               </div>
             </Panel>
@@ -418,9 +426,9 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
                     </tr>
                   </thead>
                   <tbody>
-                    {defaultTasks.map((task) => {
+                    {tasks.map((task) => {
                       const user = findUser(task.assigneeId);
-                      const content = defaultContentItems.find((c) => c.id === task.contentId);
+                      const content = contentItems.find((c) => c.id === task.contentId);
                       return (
                         <tr key={task.id} className="border-b border-slate-100">
                           <td className="py-3">
@@ -445,7 +453,7 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
               </div>
             ) : (
               <div className="mt-6 space-y-4">
-                {defaultTasks.map((task) => {
+                {tasks.map((task) => {
                   const start = new Date(task.startDate);
                   const end = new Date(task.due);
                   const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -494,10 +502,10 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
       return (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {[
-            { title: "Draft items", value: defaultContentItems.filter((item) => item.status === "Draft").length },
-            { title: "In review", value: defaultContentItems.filter((item) => item.status === "Review").length },
-            { title: "Published", value: defaultContentItems.filter((item) => item.status === "Published").length },
-            { title: "Active tasks", value: defaultTasks.length },
+            { title: "Draft items", value: contentItems.filter((item) => item.status === "Draft").length },
+            { title: "In review", value: contentItems.filter((item) => item.status === "Review").length },
+            { title: "Published", value: contentItems.filter((item) => item.status === "Published").length },
+            { title: "Active tasks", value: tasks.length },
             { title: "Team members", value: mockUsers.length },
           ].map((metric) => (
             <Panel key={metric.title} title={metric.title} subtitle="Current snapshot">
@@ -510,7 +518,7 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
     case "Brief":
       return (
         <div className="grid gap-6 lg:grid-cols-2">
-          {defaultContentItems.map((item) => (
+          {contentItems.map((item) => (
             <Panel key={item.id} title={item.title} subtitle={item.hook}>
               <div className="grid gap-4">
                 {[
@@ -535,7 +543,7 @@ export function PageViews({ page, search, statusFilter, typeFilter }: PageViewsP
     case "Assets":
       return (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {defaultContentItems.map((item) => (
+          {contentItems.map((item) => (
             <div key={item.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <p className="font-semibold text-slate-950">{item.title}</p>
