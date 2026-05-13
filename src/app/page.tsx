@@ -34,26 +34,15 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      <div className="mx-auto flex min-h-screen max-w-[1720px] gap-6 px-5 py-6 xl:px-8">
+    <div className="min-h-screen bg-slate-100 text-slate-950">
+      <div className="mx-auto flex min-h-screen max-w-[1600px] gap-4 px-4 py-4 xl:px-6">
         <Sidebar selectedPage={currentPage} onSelectPage={setCurrentPage} />
 
-        <main className="flex min-h-screen flex-1 flex-col gap-6">
+        <main className="flex min-h-screen flex-1 flex-col gap-4">
           <div className="space-y-6">
-            <div className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Sprint 1 foundation</p>
-                  <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">Domore Content Studio</h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                    A clean, minimal foundation for planning content, managing status, and aligning team work across the first studio workflow.
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  <span className="font-semibold text-slate-950">Current page:</span>
-                  <span>{currentPage}</span>
-                </div>
-              </div>
+            <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+              <p className="font-medium text-slate-900">Domore Content Studio</p>
+              <p>Page: <span className="font-semibold text-slate-900">{currentPage}</span></p>
             </div>
 
             <Topbar
@@ -64,7 +53,6 @@ export default function Home() {
               onStatusChange={setStatusFilter}
               onTypeChange={setTypeFilter}
               currentUser={currentUser}
-              onUserChange={setCurrentUserId}
               canAdd={canAdd}
               onImportClick={() => setShowImportWizard(true)}
             />
