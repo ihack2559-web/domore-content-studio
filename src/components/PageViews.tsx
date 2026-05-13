@@ -28,6 +28,7 @@ type CalendarEvent = {
   type: "task" | "publish";
   contentId: string;
   status: string;
+  thumbnail: string;
 };
 
 const filterContent = (items: ContentItem[], status: string, type: string, query: string) => {
@@ -107,6 +108,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
             type: "task",
             contentId: task.contentId,
             status: task.status,
+            thumbnail: content.thumbnail,
           });
         }
       });
@@ -121,6 +123,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
           type: "publish",
           contentId: content.id,
           status: content.status,
+          thumbnail: content.thumbnail,
         });
       });
     }
@@ -147,25 +150,28 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
       }
 
       return (
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-2">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div key={day} className="p-2 text-center font-semibold text-slate-600">
               {day}
             </div>
           ))}
           {days.map((day, index) => (
-            <div key={index} className="min-h-[120px] border border-slate-200 p-2">
+            <div key={index} className="min-h-[132px] rounded-lg border border-slate-200 bg-white p-2">
               <div className="text-sm font-semibold text-slate-950">{day.date.getDate()}</div>
               <div className="space-y-1">
                 {day.events.slice(0, 3).map((event) => (
                   <button
                     key={event.id}
                     onClick={() => setSelectedContentId(event.contentId)}
-                    className={`w-full rounded px-1 py-1 text-left text-xs ${
-                      event.type === "task" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+                    className={`w-full rounded-md border px-1.5 py-1 text-left text-[11px] ${
+                      event.type === "task" ? "border-blue-200 bg-blue-50 text-blue-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"
                     }`}
                   >
-                    {event.title}
+                    <div className="flex items-center gap-1.5">
+                      <img src={event.thumbnail} alt="" className="h-4 w-4 rounded object-cover" />
+                      <span className="truncate">{event.title}</span>
+                    </div>
                   </button>
                 ))}
                 {day.events.length > 3 && <div className="text-xs text-slate-500">+{day.events.length - 3} more</div>}
@@ -191,9 +197,9 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
       }
 
       return (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {weekDays.map((day) => (
-            <div key={day.date.toISOString()} className="rounded-3xl border border-slate-200 bg-white p-4">
+            <div key={day.date.toISOString()} className="rounded-xl border border-slate-200 bg-white p-4">
               <h3 className="font-semibold text-slate-950">{day.date.toDateString()}</h3>
               <div className="mt-2 space-y-2">
                 {day.events.map((event) => (
@@ -208,7 +214,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
                     <div className="text-sm text-slate-600">{event.type === "task" ? "Task" : "Publish"}</div>
                   </button>
                 ))}
-                {!day.events.length && <p className="text-sm text-slate-500">No events</p>}
+                {!day.events.length && <p className="text-sm text-slate-500">No plans</p>}
               </div>
             </div>
           ))}
@@ -267,7 +273,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
             <Panel title="Content board" subtitle="Review content items, frames, and status lanes.">
               <div className="grid gap-4 md:grid-cols-3">
                 {statusBuckets.map((status) => (
-                  <div key={status} className="space-y-4 rounded-3xl bg-slate-50 p-4">
+                  <div key={status} className="space-y-4 rounded-xl bg-slate-50 p-4">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-600">{status}</p>
                     {contentItems
                       .filter((item) => item.status === status)
@@ -275,7 +281,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
                         const owner = findUser(item.ownerId);
                         const itemFrames = frames.filter((frame) => frame.contentId === item.id);
                         return (
-                          <div key={item.id} className="rounded-3xl bg-white p-4 shadow-sm">
+                          <div key={item.id} className="rounded-xl bg-white p-4 shadow-sm">
                             <button
                               type="button"
                               onClick={() => setSelectedContentId(item.id)}
@@ -285,42 +291,42 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
                                 <img
                                   src={item.thumbnail}
                                   alt={item.title}
-                                  className="h-20 w-20 flex-none rounded-3xl object-cover shadow-sm"
+                                  className="h-16 w-16 flex-none rounded-xl object-cover shadow-sm"
                                 />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center justify-between gap-3">
                                     <Badge variant={item.status === "Published" ? "success" : item.status === "Draft" ? "warning" : "accent"}>
                                       {item.type}
                                     </Badge>
-                                    <span className="text-xs uppercase tracking-[0.18em] text-slate-500">{item.progress}%</span>
+                                    <span className="text-[11px] uppercase tracking-[0.08em] text-slate-500">{item.progress}%</span>
                                   </div>
-                                  <p className="mt-3 text-base font-semibold text-slate-950">{item.title}</p>
-                                  <p className="mt-2 text-sm text-slate-500">{item.hook}</p>
+                                  <p className="mt-3 text-sm font-semibold text-slate-950">{item.title}</p>
+                                  <p className="mt-1 text-xs text-slate-500">{item.hook}</p>
                                 </div>
                               </div>
                               <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-slate-600">
                                 <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Owner</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Owner</p>
                                   <p>{owner.name}</p>
                                 </div>
                                 <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Channel</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Channel</p>
                                   <p>{item.channel}</p>
                                 </div>
                                 <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Shoot</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Shoot</p>
                                   <p>{item.shootDate}</p>
                                 </div>
                                 <div>
-                                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Post</p>
+                                  <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Post</p>
                                   <p>{item.postDate}</p>
                                 </div>
                               </div>
                             </button>
 
-                            <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-3">
+                            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
                               <div className="flex items-center justify-between gap-3">
-                                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Storyboard</p>
+                                <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Storyboard</p>
                                 <button
                                   type="button"
                                   onClick={() => handleAddFrame(item.id)}
@@ -332,9 +338,9 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
                               <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
                                 {itemFrames.length ? (
                                   itemFrames.map((frame) => (
-                                    <div key={frame.id} className="min-w-[220px] rounded-3xl bg-white p-3 shadow-sm">
-                                      <img src={frame.image} alt={`Scene ${frame.sceneNumber}`} className="h-24 w-full rounded-3xl object-cover" />
-                                      <div className="mt-3 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                                    <div key={frame.id} className="min-w-[200px] rounded-xl bg-white p-3 shadow-sm">
+                                      <img src={frame.image} alt={`Scene ${frame.sceneNumber}`} className="h-20 w-full rounded-xl object-cover" />
+                                      <div className="mt-3 flex items-center justify-between text-[11px] uppercase tracking-[0.08em] text-slate-500">
                                         <span>Scene {frame.sceneNumber}</span>
                                         <span>{frame.scriptLine.length > 24 ? "..." : ""}</span>
                                       </div>
@@ -373,11 +379,11 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
 
             <Panel title="Board summary" subtitle="A quick view of the work in progress.">
               <div className="grid gap-4">
-                <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                <div className="rounded-xl border border-slate-200 bg-white p-5">
                   <p className="text-sm text-slate-500">Total items</p>
                   <p className="mt-3 text-3xl font-semibold text-slate-950">{contentItems.length}</p>
                 </div>
-                <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                <div className="rounded-xl border border-slate-200 bg-white p-5">
                   <p className="text-sm text-slate-500">Average progress</p>
                   <p className="mt-3 text-3xl font-semibold text-slate-950">{contentItems.length ? Math.round(contentItems.reduce((sum, item) => sum + item.progress, 0) / contentItems.length) : 0}%</p>
                 </div>
@@ -458,7 +464,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
                   const end = new Date(task.due);
                   const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                   return (
-                    <div key={task.id} className="rounded-3xl border border-slate-200 bg-white p-4">
+                    <div key={task.id} className="rounded-xl border border-slate-200 bg-white p-4">
                       <div className="flex items-center justify-between gap-4">
                         <button onClick={() => setSelectedContentId(task.contentId)} className="font-semibold text-slate-950 hover:underline">
                           {task.title}
@@ -529,8 +535,8 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
                   { label: "Proof", value: item.proof },
                   { label: "CTA", value: item.cta },
                 ].map((detail) => (
-                  <div key={detail.label} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{detail.label}</p>
+                  <div key={detail.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">{detail.label}</p>
                     <p className="mt-2 text-sm text-slate-700">{detail.value}</p>
                   </div>
                 ))}
@@ -544,7 +550,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
       return (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {contentItems.map((item) => (
-            <div key={item.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <p className="font-semibold text-slate-950">{item.title}</p>
                 <Badge variant="neutral">{item.type}</Badge>
@@ -569,7 +575,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
           ].map((card) => (
             <Panel key={card.label} title={card.label} subtitle="Performance overview">
               <p className="mt-3 text-4xl font-semibold text-slate-950">{card.value}</p>
-              <p className="mt-2 text-sm text-slate-500">{card.trend} vs last month</p>
+              <p className="mt-1 text-xs text-slate-500">{card.trend} vs last month</p>
             </Panel>
           ))}
         </div>
@@ -590,7 +596,7 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
           ].map((label) => (
             <div
               key={label}
-              className="rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900"
             >
               {label}
             </div>
@@ -602,9 +608,9 @@ export function PageViews({ page, search, statusFilter, typeFilter, contentItems
       return (
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {mockUsers.map((user) => (
-            <div key={user.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div key={user.id} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-slate-950 text-sm font-semibold text-white">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
                   {user.initials}
                 </div>
                 <div>
