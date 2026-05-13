@@ -71,7 +71,16 @@ export default function Home() {
           </div>
 
           <div className="flex-1">
-            <PageViews page={currentPage} search={search} statusFilter={statusFilter} typeFilter={typeFilter} />
+            <PageViews
+              page={currentPage}
+              search={search}
+              statusFilter={statusFilter}
+              typeFilter={typeFilter}
+              contentItems={contentItems}
+              frames={frames}
+              tasks={tasks}
+              setFrames={setFrames}
+            />
           </div>
         </main>
       </div>
